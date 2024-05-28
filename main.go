@@ -294,6 +294,6 @@ countForTimer=0;
 	chirouter.Get("/check", check)
 	chirouter.Get("/listofwords", listOfWords)
 
- http.ListenAndServe("localhost:10000", chirouter)
+ http.ListenAndServe("0.0.0.0:10000", chirouter)
 
 } 
