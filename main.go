@@ -58,9 +58,12 @@ func main() {
 			OriginPatterns: []string{"*"},
 		})
 		if err != nil {
-			
-			c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
+			if c!=nil{
+
+				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
+			}
 			return;
+			
 		}
 		 //as the listt will be updated after the mutex2 only.
 		
@@ -71,6 +74,7 @@ func main() {
 		for {
 			_, channelJson, err := c.Read(r.Context())
 			if err != nil {
+				if(c!=nil){
 				fromReturn.Lock();
 			mutex2.Lock()
 			fmt.Print("❤❤❤")
@@ -78,7 +82,7 @@ func main() {
 			if(mapOfConnection[c]==GlobalCurrentName){
 
 				toogleForTimer =false;
-				fmt.Print("yellow overriidden");
+			
 			}
 			fmt.Print("❤❤❤")
 			mutex2.Unlock();
@@ -88,10 +92,12 @@ func main() {
 			//mutex1.Unlock();
 			fromReturn.Unlock();
 			log.Println(err);
-			c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
+
+				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
+			}
 				
 			
-				fmt.Print("error in channeljson read");
+				
 				return;
 			}
 			
@@ -119,8 +125,10 @@ func main() {
 			OriginPatterns: []string{"*"},
 		})
 		if err != nil {
-		
-			c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+		 if c!=nil{
+
+			 c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+		 }
 			return;
 			
 			
@@ -133,9 +141,12 @@ func main() {
 			if err != nil {
 				delete(mapOfConnections,c);
 			// mutex.Unlock();
-			c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+			if c!=nil{
+
+				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+			}
 			
-				log.Println("error reading message:yaar error aayo ni ")
+				
 				return;
 			
 			}
@@ -155,8 +166,11 @@ func main() {
 				OriginPatterns: []string{"*"},
 			})
 			if err != nil { //
+				if ca!=nil{
+
+					ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+				}
 				
-				ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
 				return;
 				
 			}
@@ -170,13 +184,15 @@ func main() {
 			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0]))
 			mutex4.Unlock()
 			if er!=nil{
-				fmt.Print("after nil return error check✔✔✔✔✔\n\n\n");
-				fromReturn.Lock();
-				//mutex3.Unlock();
-				//mutex4.Unlock();
-				delete(mapForStream,ca);///huncha kki hunna as outsiide loop
-				fromReturn.Unlock();
-				ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+				if ca!=nil{
+
+				
+					fromReturn.Lock();
+					
+					delete(mapForStream,ca);///huncha kki hunna as outsiide loop
+					fromReturn.Unlock();
+					ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+				}
 				return;
 			}
 			
