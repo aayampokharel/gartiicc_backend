@@ -146,83 +146,7 @@ func main() {
 			mutex.Unlock()
 		}
 	})
-//  	listOfNames := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 	 func(){
-// 		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-// 			OriginPatterns: []string{"*"},
-// 		})
-// 		if err != nil {
-// 			log.Println(err)
-// 			return
-// 		}
-		
-// 		mapOfConnections[c] = true;//! this is where true is again set . 
-		
-		
-// 		defer c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
-		
-		
-// 		for{
-// _,_,err:=	c.Read(r.Context())
-// if err!=nil{
-// 	fmt.Print("\n\nexit garyo dost le from eeuta for \n\n ");
-// 	return;
-// }
-// 	mutex5.Lock()
-// 	listOfNamesJson,_:=json.Marshal(listOfAllNames);
-// 	for kk := range mapOfConnections {
-		
-// 		kk.Write(r.Context(), websocket.MessageText,((listOfNamesJson)));
-// 	}
-	
-// 	mutex5.Unlock();
 
-// }
-// //_ ,value,_:=c.Read(r.Context())
-// //if string(value)=="true"{
-
-	
-// // 	}else {  //! the format is ["name","points"]   and return ["name", "position"];
-// // 	jsonHoldList :=make([]string,2);
-	
-// // 	mutex5.Lock()
-
-// // 	json.Unmarshal(value,&jsonHoldList);
-// // 			listOfPoints:=make([]int,len(listOfAllNames));
-// // 			for ind,val:=range listOfAllNames{
-
-// // 				if val==jsonHoldList[0]{
-// // 					listOfPoints[ind],_=strconv.Atoi(jsonHoldList[1]);
-// // 	sort.Sort(sort.Reverse(sort.IntSlice(listOfPoints)));
-// // 					for i,point:=range listOfPoints{
-// // 						if convertedPoint,_:=strconv.Atoi(jsonHoldList[1]);point==convertedPoint {
-// // 							jsonHoldList[1]=strconv.Itoa(i);
-// //                             break;
-// // 						}<-
-// // 					}
-// //              break;
-
-// // }
-
-// // 			}
-
-
-// // 			mutex5.Unlock();
-// // 			sendingListJson,_:=json.Marshal(jsonHoldList);
-
-// // 			for kk := range mapOfConnections {
-				
-// // 				kk.Write(r.Context(), websocket.MessageText,((sendingListJson)));
-				
-// // 			}
-
-// // }
-		
-
-
-// 	}();
-	
-// 	}
 
 	check := http.HandlerFunc( func(w http.ResponseWriter, r *http.Request) {
 		
@@ -370,6 +294,6 @@ countForTimer=0;
 	chirouter.Get("/check", check)
 	chirouter.Get("/listofwords", listOfWords)
 
- http.ListenAndServe("localhost:8080", chirouter)
+ http.ListenAndServe("localhost:10000", chirouter)
 
 } 
