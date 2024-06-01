@@ -336,8 +336,8 @@ fmt.Print("from starting of check");
 	chirouter.Get("/check", check)
 	chirouter.Get("/listofwords", listOfWords)
 
-http.ListenAndServe("0.0.0.0:10000", chirouter)
- //http.ListenAndServe(":8080", chirouter)
+//http.ListenAndServe("0.0.0.0:10000", chirouter)
+ http.ListenAndServe(":8080", chirouter)
 
 
 } 
