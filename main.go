@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+
 	"io"
-	"log"
+
 	"net/http"
 	"sync"
 	"time"
@@ -29,9 +30,10 @@ var (
 	ind             int
 	countForTimer int
 	toogleForTimer bool=true
+	mutex4LockCheck bool=false;//@initially set to false and true when mutex4 acquired./. 
 	listOfAllNames   = []string{}
 	nameForMap        =make(chan string)
-	afterDeleteFromSlice=make(chan bool)
+	
 )
 
 type MessageText struct {
@@ -43,11 +45,11 @@ func deleteFromSlice(slice []string,name string)[]string{
 	
 for i:=range slice {
 if(slice[i] == name){
-	fmt.Print(i,name,"\n\n");
+
 	return append(slice[:i],slice[i+1:]...);
 }
 }
-fmt.Print("\n\nname bhettena ni sahti \n\n")
+
 return slice;
 }
 func main() {
@@ -59,13 +61,13 @@ func main() {
 		})
 		if err != nil {
 			if c!=nil{
-
+fmt.Print("from error 1");
 				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
 			}
 			return;
 			
 		}
-		 //as the listt will be updated after the mutex2 only.
+		 //as the list will be updated after the mutex2 only.
 		
 
 			mapOfConnection[c] = <-nameForMap;
@@ -75,23 +77,25 @@ func main() {
 			_, channelJson, err := c.Read(r.Context())
 			if err != nil {
 				if(c!=nil){
+					fmt.Print("from error 2");
 				fromReturn.Lock();
-			mutex2.Lock()
-			fmt.Print("❤❤❤")
+			mutex2.Lock() //? whhy this extra layer of lock? 
+			
 			listOfAllNames=deleteFromSlice(listOfAllNames,mapOfConnection[c]);
 			if(mapOfConnection[c]==GlobalCurrentName){
+fmt.Print("✔✔✔match 🔥🔥🔥");
+toogleForTimer =false;//@ thisis a good one as green le exit garyo bhane baal chaina  
 
-				toogleForTimer =false;
-			
+
+
 			}
-			fmt.Print("❤❤❤")
+		
 			mutex2.Unlock();
 			delete(mapOfConnection,c);
 			
-			//mutex5.Unlock();
-			//mutex1.Unlock();
+		
 			fromReturn.Unlock();
-			log.Println(err);
+		
 
 				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
 			}
@@ -114,8 +118,16 @@ func main() {
 					
 				}
 				mutex1.Unlock()
-			} else {
-				fmt.Print("error ")
+				} else {
+				mutex1.Lock()
+			
+
+				for k := range mapOfConnection {
+					k.Write(r.Context(), websocket.MessageText, []byte(" "))
+					
+				}
+				mutex1.Unlock()
+				
 			}
 		}
 	})
@@ -126,7 +138,7 @@ func main() {
 		})
 		if err != nil {
 		 if c!=nil{
-
+			fmt.Print("from error 3");
 			 c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
 		 }
 			return;
@@ -142,7 +154,7 @@ func main() {
 				delete(mapOfConnections,c);
 			// mutex.Unlock();
 			if c!=nil{
-
+				fmt.Print("from error 4");
 				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
 			}
 			
@@ -159,34 +171,42 @@ func main() {
 	})
 
 
-	check := http.HandlerFunc( func(w http.ResponseWriter, r *http.Request) {
+	check := http.HandlerFunc( func(w http.ResponseWriter, r *http.Request) { 
 		
-
+fmt.Print("from starting of check");
 			ca, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 				OriginPatterns: []string{"*"},
 			})
 			if err != nil { //
 				if ca!=nil{
-
+					fmt.Print("from error 4");
+					if mutex4LockCheck{
+	
+						defer mutex4.Unlock();
+					}
 					ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
 				}
-				
 				return;
 				
 			}
 			mutex4.Lock()
+			
+			fmt.Print("\n\n lock problem ","\n\n");
+			mutex4LockCheck=true;
 			mapForStream[ca] = true //!also use lock 
 					
 			// Send the current player name immediately
 			if(len(listOfAllNames)==0){
+				mutex4.Unlock()
 				return;
 			}
 			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0]))
+		
 			mutex4.Unlock()
 			if er!=nil{
 				if ca!=nil{
-
-				
+					
+					
 					fromReturn.Lock();
 					
 					delete(mapForStream,ca);///huncha kki hunna as outsiide loop
@@ -199,55 +219,61 @@ func main() {
 			// Periodically update the player turn
 			
 			mutex3.Lock(); 
-			for {//# esma khasma only broadcast kaam nothing else broadcast of break word for red container and broadcast of currentName on which drawing board is to be displayed.
-				print("hello brother  💦💦💦💦");
-				
-				print("hello brother  💦💦💦💦");
-				toogleForTimer=true; 
+			defer mutex3.Unlock();
+	
+			fmt.Print("list empty problem how>? ")
+			GlobalCurrentName=listOfAllNames[0];
+			for {//# esma khasma only broadcast kaam nothing else broadcast of break word for red container and broadcast of currentName on which drawing 
+			
 				for toogleForTimer {
-
+					fmt.Print("insiide loop aaecha ta ferii ",countForTimer);
 					time.Sleep(time.Second*1)  
-					//print(countForTimer,"====----====----====----====----");
-				if	countForTimer=countForTimer+1;countForTimer==5{
-countForTimer=0;
-					break;
-				}
-				//@ this is the ensure that the timer works nicely. after 5sec completes it automatically exits but if in between the drawer exits then also this will not  makee others wait. toogleForTimer is used as =false in above exit sectiion so this method will exit and again set to true for next iteration.
-
-			}
-			ind++;
-			for kz := range mapForStream {
-				
-				kz.Write(r.Context(), websocket.MessageText, []byte("Break"))
-				//! at this pause is for the red container at which post is made for getting the 
-				//! value for drawing.
-			}
-		//?problrm here is small one now ::::   jaba break bhanne sab lai pathaisake pachi red container display huncha and if another player gets added then the red cotainer is not displayed as break bhanne keyword pathaudaiina . or eevery second pathauna paryo break keyword . But this is only for that period of time after that everything is NORMAL.
-						time.Sleep(time.Second * 5);
-					//!pause for red container
-				
-					if (index + 1) < len(listOfAllNames) {
-						index = index + 1
-						} else {
-							index = 0
-						}
-						if(len(listOfAllNames)==0){
-							return;
-						}
-					currentName := listOfAllNames[index]
-					GlobalCurrentName=currentName;
-				
+					fmt.Print("\n\ntiimer\n\n")
+					if	countForTimer=countForTimer+1;countForTimer==7{
+						fmt.Print("\n\ncountForTimer set to 0\n\n")
+						break;
+						} 
+					}
+					toogleForTimer=true; 
+					//@ this is the ensure that the timer works nicely. after 5sec completes it automatically exits but if in between the drawer exits then also this will not  makee others wait. toogleForTimer is used as =false in above exit sectiion so this method will exit and again set to true for next iteration.
+					
+					countForTimer=0;
+					ind++;
+						if (index + 1) < len(listOfAllNames) {
+					index = index + 1
+					} else {
+						index = 0
+					}
+					if(len(listOfAllNames)==0){
+						return;
+					}
+				currentName := listOfAllNames[index]
+				GlobalCurrentName=currentName;
 					for kz := range mapForStream {
+						
+						kz.Write(r.Context(), websocket.MessageText, []byte("Break"))
+						//! at this pause is for the red container at which post is made for getting the 
+						//! value for drawing.
+					}
+		//?problrm here is small one now ::::   jaba break bhanne sab lai pathaisake pachi red container display huncha and if another player gets added then the red cotainer is not displayed as break bhanne keyword pathaudaiina . or eevery second pathauna paryo break keyword . But this is only for that period of time after that everything is NORMAL.
+		if(len(listOfAllNames) == 0) {
+			fmt.Print("length 0 bhayo ni ")
+			return;
+			};//!yo condition kina mathi lyako hola bhanda to return the lock if ii dont then yo sleep ta 2o sec ho chalcha sure and lock dinu parcha so unlock garna parchha so that aaune le 40 seconds chai atleast chalairakhos . and as long as the timer of below is lesser no problem . baal chaina yes eeuta extrra resource chai consume bhaiirako cha.  
+			
+			//@ COMPULSORILY yo red container lai we can use channel AS NABHAE SLEEP HUDA ARKO AAUNE LE 10 SEC EXTRA KURNA PARCHA AS LOCK RELEASE BHAKO HUNNA . IF STATEMENT IS EXPENSIVE . 
+			time.Sleep(time.Second * 5);
+		
+			//!pause for red container BREAK CONTAINER
+			
+			for kz := range mapForStream {
 					
 						
 						kz.Write(r.Context(), websocket.MessageText, []byte(currentName))
 					
 					}
-					fmt.Print("before nil return error check✔✔✔✔✔\n\n\n");
-					if(len(listOfAllNames) == 0) {
-						mutex3.Unlock();
-						return;
-					};
+				fmt.Print("from iinsidie the functioin being ✔✔✔✔✔");
+				
 				}
 		
 	
@@ -293,7 +319,7 @@ countForTimer=0;
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
 	
 		slices :=[]string{"ball","brother"};
-		if ind==len(slices){
+		if ind>=len(slices){
          ind=0;//lock system for shared variable.
         }
 		sliceJson,_:=json.Marshal(slices[ind]);
@@ -310,6 +336,8 @@ countForTimer=0;
 	chirouter.Get("/check", check)
 	chirouter.Get("/listofwords", listOfWords)
 
- http.ListenAndServe("0.0.0.0:10000", chirouter)
+http.ListenAndServe("0.0.0.0:10000", chirouter)
+ //http.ListenAndServe(":8080", chirouter)
+
 
 } 
