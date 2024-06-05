@@ -28,11 +28,12 @@ var (
 	GlobalCurrentName string
 	index            int
 	ind             int
-	countForTimer int
+	countForTimer float64
 	toogleForTimer bool=true
 	mutex4LockCheck bool=false;//@initially set to false and true when mutex4 acquired./. 
 	listOfAllNames   = []string{}
 	nameForMap        =make(chan string)
+	toogleForProgressBar bool
 	
 )
 
@@ -194,6 +195,7 @@ fmt.Print("from starting of check");
 			fmt.Print("\n\n lock problem ","\n\n");
 			mutex4LockCheck=true;
 			mapForStream[ca] = true //!also use lock 
+			
 					
 			// Send the current player name immediately
 			if(len(listOfAllNames)==0){
@@ -201,6 +203,9 @@ fmt.Print("from starting of check");
 				return;
 			}
 			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0]))
+			if(toogleForProgressBar){
+				ca.Write(r.Context(), websocket.MessageText, []byte("Break"))
+			}
 		
 			mutex4.Unlock()
 			if er!=nil{
@@ -221,23 +226,24 @@ fmt.Print("from starting of check");
 			mutex3.Lock(); 
 			defer mutex3.Unlock();
 	
-			fmt.Print("list empty problem how>? ")
+		
 			GlobalCurrentName=listOfAllNames[0];
 			for {//# esma khasma only broadcast kaam nothing else broadcast of break word for red container and broadcast of currentName on which drawing 
-			
+			countForTimer=0.0;
 				for toogleForTimer {
 					fmt.Print("insiide loop aaecha ta ferii ",countForTimer);
-					time.Sleep(time.Second*1)  
+					time.Sleep(time.Millisecond*500)  
 					fmt.Print("\n\ntiimer\n\n")
-					if	countForTimer=countForTimer+1;countForTimer==7{
+					if	countForTimer=countForTimer+0.5;countForTimer==20{
 						fmt.Print("\n\ncountForTimer set to 0\n\n")
+						toogleForProgressBar=true;
+						countForTimer=0;
 						break;
 						} 
 					}
 					toogleForTimer=true; 
 					//@ this is the ensure that the timer works nicely. after 5sec completes it automatically exits but if in between the drawer exits then also this will not  makee others wait. toogleForTimer is used as =false in above exit sectiion so this method will exit and again set to true for next iteration.
 					
-					countForTimer=0;
 					ind++;
 						if (index + 1) < len(listOfAllNames) {
 					index = index + 1
@@ -263,6 +269,7 @@ fmt.Print("from starting of check");
 			
 			//@ COMPULSORILY yo red container lai we can use channel AS NABHAE SLEEP HUDA ARKO AAUNE LE 10 SEC EXTRA KURNA PARCHA AS LOCK RELEASE BHAKO HUNNA . IF STATEMENT IS EXPENSIVE . 
 			time.Sleep(time.Second * 5);
+			toogleForProgressBar=false;
 		
 			//!pause for red container BREAK CONTAINER
 			
@@ -305,6 +312,7 @@ fmt.Print("from starting of check");
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
 		if(len(listOfAllNames)==0){
+	//! use THE SAME  lock or somethng as concurrent countFor timER IS CRITICAL . ===============================
 			return;
 		}
 		listAsJson,_:=json.Marshal(listOfAllNames);
@@ -328,6 +336,15 @@ fmt.Print("from starting of check");
 		w.Write((sliceJson)); 
 		
 	},);
+startingTimeForProgressBar:=http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
+		
+	w.Write([]byte(fmt.Sprintf("%f",countForTimer)));
+	     
+		
+	},);
 	chirouter := chi.NewRouter()
 	chirouter.Get("/", fn)
 	chirouter.Get("/listofnames", listOfNamesInDrawer)
@@ -335,9 +352,10 @@ fmt.Print("from starting of check");
 	chirouter.Get("/paint", paint)
 	chirouter.Get("/check", check)
 	chirouter.Get("/listofwords", listOfWords)
+	chirouter.Get("/progressbar", startingTimeForProgressBar)
 
 //http.ListenAndServe("0.0.0.0:10000", chirouter)
- http.ListenAndServe(":8080", chirouter)
+ http.ListenAndServe(":8080", chirouter)//! i am in port8080 branch ....CHANGE IT . 
 
 
 } 
