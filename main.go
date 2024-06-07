@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
 	"io"
-
 	"net/http"
 	"sync"
 	"time"
@@ -15,6 +13,7 @@ import (
 )
 
 var (
+	slices =[]string{"ball","brother"};
 	mapOfConnection  = make(map[*websocket.Conn]string)
 	mapOfConnections = make(map[*websocket.Conn]bool)
 	mapForStream     = make(map[*websocket.Conn]bool)
@@ -23,7 +22,6 @@ var (
 	mutex2           = &sync.Mutex{}
 	mutex3           = &sync.Mutex{}
 	mutex4           = &sync.Mutex{}
-	
 	fromReturn       = &sync.Mutex{}
 	GlobalCurrentName string
 	index            int
@@ -31,7 +29,7 @@ var (
 	countForTimer float64
 	toogleForTimer bool=true
 	mutex4LockCheck bool=false;//@initially set to false and true when mutex4 acquired./. 
-	listOfAllNames   = []string{}
+	listOfAllNames   = []PlayerPoints{}
 	nameForMap        =make(chan string)
 	toogleForProgressBar bool
 	
@@ -41,11 +39,15 @@ type MessageText struct {
 	Name    string `json:"Name"`
 	Message string `json:"Message"`
 }
+type PlayerPoints struct{
+	Name string 
+	Points int 
+}
 
-func deleteFromSlice(slice []string,name string)[]string{
+func deleteFromSlice(slice []PlayerPoints,name string)[]PlayerPoints{
 	
 for i:=range slice {
-if(slice[i] == name){
+if(slice[i].Name == name){
 
 	return append(slice[:i],slice[i+1:]...);
 }
@@ -73,19 +75,20 @@ fmt.Print("from error 1");
 
 			mapOfConnection[c] = <-nameForMap;
 		
-		
+	
 		for {
 			_, channelJson, err := c.Read(r.Context())
 			if err != nil {
 				if(c!=nil){
 					fmt.Print("from error 2");
 				fromReturn.Lock();
-			mutex2.Lock() //? whhy this extra layer of lock? 
+				
+			mutex2.Lock() //? whhy this extra layer of lock? ..not reqd . 
 			
 			listOfAllNames=deleteFromSlice(listOfAllNames,mapOfConnection[c]);
 			if(mapOfConnection[c]==GlobalCurrentName){
-fmt.Print("✔✔✔match 🔥🔥🔥");
-toogleForTimer =false;//@ thisis a good one as green le exit garyo bhane baal chaina  
+
+toogleForTimer =false;//@ thisis if yellow exits in middle, then we can stream out break keyword.  
 
 
 
@@ -112,18 +115,37 @@ toogleForTimer =false;//@ thisis a good one as green le exit garyo bhane baal ch
 			
 			if msgText.Message != "" {
 				mutex1.Lock()
-			
+			  
+			  fmt.Print("✔✔",ind,"✔✔");
 
-				for k := range mapOfConnection {
-					k.Write(r.Context(), websocket.MessageText, (channelJson))
-					
+                if(slices[ind]==msgText.Message){
+					for val:= range listOfAllNames{
+						if listOfAllNames[val].Name==msgText.Name{
+listOfAllNames[val].Points+=10;
+break;
+						}
+					}
+					msgText.Message="Gave Correct Answer. BRAVO !!";
+					response,_:=json.Marshal(msgText);
+					for k := range mapOfConnection {
+
+						k.Write(r.Context(), websocket.MessageText,response);
+						
+					}
+
+				}else{
+					for k := range mapOfConnection {
+
+				k.Write(r.Context(), websocket.MessageText,channelJson);
+						
+					}
 				}
 				mutex1.Unlock()
 				} else {
 				mutex1.Lock()
 			
 
-				for k := range mapOfConnection {
+				for k := range mapOfConnection {//@ why is this requiired for " " ? 
 					k.Write(r.Context(), websocket.MessageText, []byte(" "))
 					
 				}
@@ -174,13 +196,18 @@ toogleForTimer =false;//@ thisis a good one as green le exit garyo bhane baal ch
 
 	check := http.HandlerFunc( func(w http.ResponseWriter, r *http.Request) { 
 		
-fmt.Print("from starting of check");
+
 			ca, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 				OriginPatterns: []string{"*"},
 			})
 			if err != nil { //
 				if ca!=nil{
 					fmt.Print("from error 4");
+					if(len(listOfAllNames)==0){
+						
+						ind=0;
+						
+					}
 					if mutex4LockCheck{
 	
 						defer mutex4.Unlock();
@@ -192,17 +219,19 @@ fmt.Print("from starting of check");
 			}
 			mutex4.Lock()
 			
-			fmt.Print("\n\n lock problem ","\n\n");
+		
 			mutex4LockCheck=true;
 			mapForStream[ca] = true //!also use lock 
 			
 					
 			// Send the current player name immediately
 			if(len(listOfAllNames)==0){
+			
 				mutex4.Unlock()
+				ind=0;
 				return;
 			}
-			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0]))
+			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0].Name))
 			if(toogleForProgressBar){
 				ca.Write(r.Context(), websocket.MessageText, []byte("Break"))
 			}
@@ -227,15 +256,15 @@ fmt.Print("from starting of check");
 			defer mutex3.Unlock();
 	
 		
-			GlobalCurrentName=listOfAllNames[0];
+			GlobalCurrentName=listOfAllNames[0].Name;
 			for {//# esma khasma only broadcast kaam nothing else broadcast of break word for red container and broadcast of currentName on which drawing 
 			countForTimer=0.0;
 				for toogleForTimer {
-					fmt.Print("insiide loop aaecha ta ferii ",countForTimer);
+					
 					time.Sleep(time.Millisecond*500)  
-					fmt.Print("\n\ntiimer\n\n")
+			
 					if	countForTimer=countForTimer+0.5;countForTimer==20{
-						fmt.Print("\n\ncountForTimer set to 0\n\n")
+				
 						toogleForProgressBar=true;
 						countForTimer=0;
 						break;
@@ -253,7 +282,7 @@ fmt.Print("from starting of check");
 					if(len(listOfAllNames)==0){
 						return;
 					}
-				currentName := listOfAllNames[index]
+				currentName := listOfAllNames[index].Name;
 				GlobalCurrentName=currentName;
 					for kz := range mapForStream {
 						
@@ -263,7 +292,7 @@ fmt.Print("from starting of check");
 					}
 		//?problrm here is small one now ::::   jaba break bhanne sab lai pathaisake pachi red container display huncha and if another player gets added then the red cotainer is not displayed as break bhanne keyword pathaudaiina . or eevery second pathauna paryo break keyword . But this is only for that period of time after that everything is NORMAL.
 		if(len(listOfAllNames) == 0) {
-			fmt.Print("length 0 bhayo ni ")
+			
 			return;
 			};//!yo condition kina mathi lyako hola bhanda to return the lock if ii dont then yo sleep ta 2o sec ho chalcha sure and lock dinu parcha so unlock garna parchha so that aaune le 40 seconds chai atleast chalairakhos . and as long as the timer of below is lesser no problem . baal chaina yes eeuta extrra resource chai consume bhaiirako cha.  
 			
@@ -279,7 +308,7 @@ fmt.Print("from starting of check");
 						kz.Write(r.Context(), websocket.MessageText, []byte(currentName))
 					
 					}
-				fmt.Print("from iinsidie the functioin being ✔✔✔✔✔");
+				
 				
 				}
 		
@@ -298,10 +327,11 @@ fmt.Print("from starting of check");
 		
 		mutex2.Lock()
 		
-		listOfAllNames = append(listOfAllNames, nameOfCurrentPlayer)
+		listOfAllNames = append(listOfAllNames,PlayerPoints{Name:nameOfCurrentPlayer,Points: 0 } );
+
 		nameForMap<-nameOfCurrentPlayer;
 		
-		w.Write([]byte(listOfAllNames[0]))
+		w.Write([]byte(listOfAllNames[0].Name))
 		mutex2.Unlock()
 		
 	
@@ -326,7 +356,7 @@ fmt.Print("from starting of check");
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
 	
-		slices :=[]string{"ball","brother"};
+		
 		if ind>=len(slices){
          ind=0;//lock system for shared variable.
         }
