@@ -178,6 +178,11 @@ break;
 			// mutex.Unlock();
 			if c!=nil{
 				fmt.Print("from error 4");
+				if(len(listOfAllNames)==0){
+						
+					ind=0;
+					
+				}
 				c.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
 			}
 			
@@ -202,12 +207,8 @@ break;
 			})
 			if err != nil { //
 				if ca!=nil{
-					fmt.Print("from error 4");
-					if(len(listOfAllNames)==0){
-						
-						ind=0;
-						
-					}
+					fmt.Print("from error check");
+					
 					if mutex4LockCheck{
 	
 						defer mutex4.Unlock();
@@ -232,7 +233,7 @@ break;
 				return;
 			}
 			er:=ca.Write(r.Context(), websocket.MessageText, []byte(listOfAllNames[0].Name))
-			if(toogleForProgressBar){
+			if(toogleForProgressBar){//// check properly for the break function exit garera jodiepachi pani straight break  option print aako  cha 
 				ca.Write(r.Context(), websocket.MessageText, []byte("Break"))
 			}
 		
@@ -245,7 +246,7 @@ break;
 					
 					delete(mapForStream,ca);///huncha kki hunna as outsiide loop
 					fromReturn.Unlock();
-					ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted")
+					ca.Close(websocket.StatusNormalClosure, "cross origin WebSocket accepted");
 				}
 				return;
 			}
