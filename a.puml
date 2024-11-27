@@ -1,0 +1,15 @@
+@startuml
+actor Players
+actor WebSocketServer
+
+entity "Drawsaurus Game" {
+    :Drawing Interface;
+    :Guessing System;
+    :Timer;
+}
+
+Players -> "Drawsaurus Game" : "Draws and Guesses"
+Players -> "Drawsaurus Game" : "Start / Stop Timer"
+"Drawsaurus Game" -> WebSocketServer : "Real-time Communication"
+
+@enduml
